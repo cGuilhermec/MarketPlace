@@ -5,79 +5,177 @@ import { hash } from "bcryptjs";
 
 export const createUser = async (req: Request, res: Response) => {
 
-    const { name, email, password, accessName } = req.body;
+    try {
+        
+        const { name, email, password, accessName } = req.body;
 
-    const isUserUniqueEmail = await prisma.user.findUnique({
-        where: {
-            email
-        },
-    });
-
-    const isAccessName = await prisma.access.findUnique({
-        where: {
-            name: accessName
-        },
-    });
-
-    if(!isAccessName) {
-        return res.status(400).json({ Message: "This access level does not exist" });
-    };
-
-    if(isUserUniqueEmail) {
-        return res.status(400).json({ Message: "User exist" });
-    };
-
-    const hashPassword = await hash(password, 8);
-
-    const user = await prisma.user.create({
-
-        data: { name, email, password: hashPassword, Access: {
-            connect: {
-                name: accessName    
+        const isUserUniqueEmail = await prisma.user.findUnique({
+            where: {
+                email
             },
-        } },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            Access: {
-                select: {
-                    name: true
-                },
+        });
+
+        const isAccessName = await prisma.access.findUnique({
+            where: {
+                name: accessName
             },
-        },
-    });
+        });
+
+        if(!isAccessName) {
+            return res.status(400).json({ Message: "This access level does not exist" });
+        };
+
+        if(isUserUniqueEmail) {
+            return res.status(400).json({ Message: `User ${isUserUniqueEmail.email} exist` });
+        };
+
+        const hashPassword = await hash(password, 8);
+
+        const user = await prisma.user.create({
+
+            data: { name, email, password: hashPassword, UserAccess: {
+                create: {
+                    Access: {
+                        connect: {
+                            name: accessName,
+                        }
+                    }
+                }
+            }},
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                UserAccess: {
+                    select: {
+                        Access: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
+            },
+        });
 
 
-    return res.json(user);
+        return res.status(201).json(user);
+
+    } catch (error) {
+        res.status(400).json(error);
+    }
+
 };
 
 export const deleteUsers = async (req: Request, res: Response) => {
 
-    await prisma.user.deleteMany();
+    try {
+        
+        await prisma.user.deleteMany();
 
-    return res.json({ Menssage: "All Users deleted" });
+        return res.status(200).json({ Menssage: "All Users deleted" });
+
+    } catch (error) {
+        return res.status(400).json(error);
+    };
 
 };
 
 export const deleteOneUser = async ( req: Request, res: Response ) => {
 
-    const { id } = req.body;
+    try {
+        
+        const { id } = req.body;
 
-    const user = await prisma.user.delete({
-        where: {
-            id
-        },
-    });
+        const names = await prisma.user.findUnique({
+            where: {
+                id: id,
+            }
+        });
 
-    return res.json({ Message: `User ${id} deleted whit success!` });
+        const user = await prisma.user.delete({
+            where: {
+                id
+            },
+        });
+
+        return res.status(200).json({ Message: `User ${names?.name} deleted whit success!` });
+
+
+    } catch (error) {
+        return res.status(400).json(error);
+    };
 
 };
 
 export const getAllUsers = async ( req: Request, res: Response )  => {
 
-    const users = await prisma.user.findMany();
+    try {
+        
+        const users = await prisma.user.findMany({
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            Store: {
+                select: {
+                    name: true
+                }
+            },
+            UserAccess: {
+                select: {
+                    Access: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
+    });
 
-    return res.json(users);
+    return res.status(200).json(users);
+
+    } catch (error) {
+        return res.status(400).json(error);
+    };
 
 };
+
+export const getUniqueUser = async ( req: Request, res: Response ) => {
+
+    try {
+        
+        const { id } = req.user;
+
+        const user = await prisma.user.findUnique({
+            where: {
+                id,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                UserAccess: {
+                    select: {
+                        Access: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if(!user) {
+            return res.status(204).json({ Message: "User does not create or dont exist." });
+        }
+
+        return res.status(200).json(user);
+
+    } catch (error) {
+        return res.status(400).json(error);
+    }
+
+}

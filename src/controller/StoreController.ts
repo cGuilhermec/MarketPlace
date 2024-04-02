@@ -5,18 +5,16 @@ import { prisma } from "../database/prisma";
 export const createSotre = async (req: Request, res: Response) => {
 
     const {name} = req.body;
-    const {userId} = req.params;
+    const { id } = req.user;
 
     const isUser = await prisma.user.findUnique({
         where: {
-            id: userId
+            id
         }
     });
 
     if(!isUser) {
-        return res.status(400).json({ Message: "User does not exist!" });
-    } else if (isUser) {
-        return res.status(409).json({ Message: "There is already a store for this user" });
+        return res.status(400).json({ Message: `User does not exist!` });
     };
 
     const store = await prisma.store.create({
@@ -24,7 +22,7 @@ export const createSotre = async (req: Request, res: Response) => {
             name,
             User: {
                 connect: {
-                    id: userId
+                    id
                 }
             }
             
