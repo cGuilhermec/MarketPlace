@@ -6,6 +6,7 @@ import { createSotre, findManyStore } from "./controller/StoreController";
 import { createProduct, deleteProduct, findManyProduct } from "./controller/ProductController";
 import { signIn } from "./controller/SessionsController";
 import { authMiddleware } from "./middleware/AuthMiddleware";
+import { createSale } from "./controller/SalerController";
 
 
 export const router = Router();
@@ -25,11 +26,13 @@ router.get("/accesses", authMiddleware(["adm"]), getAllAccesses);
 router.post("/store", authMiddleware(["adm", "Vendedor"]), createSotre);
 router.get("/stores", findManyStore);
 
-
 //Product
-router.post("/product", authMiddleware(["adm", "Vendedor"]), createProduct);
-router.get("/products", findManyProduct);
+router.post("/product/:storeId", authMiddleware(["adm", "Vendedor"]), createProduct);
+router.get("/products", authMiddleware(["Comprador", "adm", "Vendedor"]), findManyProduct);
 router.delete("/delete-product/:id", deleteProduct);
 
 //Auth
 router.post("/sign-in", signIn);
+
+//Sale
+router.post("/create-sale", authMiddleware(["Comprador", "adm", "Vendedor"]), createSale);

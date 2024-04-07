@@ -54,7 +54,7 @@ export const createUser = async (req: Request, res: Response) => {
                             }
                         }
                     }
-                }
+                },
             },
         });
 
@@ -119,6 +119,7 @@ export const getAllUsers = async ( req: Request, res: Response )  => {
             email: true,
             Store: {
                 select: {
+                    id: true,
                     name: true
                 }
             },

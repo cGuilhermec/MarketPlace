@@ -6,6 +6,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
     const { name, price, amout } = req.body;
     const { storeId } = req.params;
+    const { id } = req.user;
 
     const isStore = await prisma.store.findUnique({
         where: {

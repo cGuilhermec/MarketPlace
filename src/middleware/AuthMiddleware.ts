@@ -19,7 +19,7 @@ export function authMiddleware(permissions?: string[]) {
         const authHeader = req.headers.authorization;
 
         if( !authHeader|| !authHeader.startsWith("Bearer ") ) {
-            return res.status(401).json({ Message: "The token was not passed!" })
+            return res.status(401).json({ Message: "The token was not provided!" })
         }
 
         // Extrai o token do cabeçalho
